@@ -1,0 +1,7 @@
+#get hex file
+
+packihx nameOfFileYouWantToConvert.ihx > anyFileName.hex
+
+#compile
+
+sdcc filename.c
