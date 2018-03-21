@@ -275,7 +275,6 @@ _b::
 ;--------------------------------------------------------
 ; overlayable items in internal ram 
 ;--------------------------------------------------------
-	.area	OSEG    (OVR,DATA)
 ;--------------------------------------------------------
 ; indirectly addressable internal ram data
 ;--------------------------------------------------------
@@ -334,8 +333,6 @@ _b::
 ;------------------------------------------------------------
 ;Allocation info for local variables in function '_main_'
 ;------------------------------------------------------------
-;i                         Allocated to registers r6 r7 
-;------------------------------------------------------------
 ;	sonokeling.c:7: void _main_(void) __naked
 ;	-----------------------------------------
 ;	 function _main_
@@ -343,33 +340,39 @@ _b::
 __main_:
 ;	naked function: no prologue.
 ;	sonokeling.c:9: while (1){
-00103$:
-;	sonokeling.c:11: a = 1;
+00105$:
+;	sonokeling.c:10: a = 1;
 	mov	_a,#0x01
 	mov	(_a + 1),#0x00
-;	sonokeling.c:12: b = 0b10000000;
+;	sonokeling.c:11: b = 0b10000000;
 	mov	_b,#0x80
 	mov	(_b + 1),#0x00
-;	sonokeling.c:13: for(i=0;i<8;i++)
-	mov	r6,#0x00
-	mov	r7,#0x00
-00105$:
-;	sonokeling.c:15: P1 ^= a+b;
-	mov	r5,_a
+;	sonokeling.c:12: while(b>0)
+00101$:
+	clr	c
+	clr	a
+	subb	a,_b
+	mov	a,#(0x00 ^ 0x80)
+	mov	b,(_b + 1)
+	xrl	b,#0x80
+	subb	a,b
+	jnc	00105$
+;	sonokeling.c:14: P1 ^= a+b;
+	mov	r7,_a
 	mov	a,_b
-	add	a,r5
-	mov	r5,a
-	mov	r4,_P1
-	xrl	a,r4
+	add	a,r7
+	mov	r7,a
+	mov	r6,_P1
+	xrl	a,r6
 	mov	_P1,a
-;	sonokeling.c:16: a <<=1;
+;	sonokeling.c:15: a <<=1;
 	mov	a,(_a + 1)
 	xch	a,_a
 	add	a,acc
 	xch	a,_a
 	rlc	a
 	mov	(_a + 1),a
-;	sonokeling.c:17: b >>=1;
+;	sonokeling.c:16: b >>=1;
 	mov	a,(_b + 1)
 	mov	c,acc.7
 	rrc	a
@@ -377,19 +380,7 @@ __main_:
 	rrc	a
 	xch	a,_b
 	mov	(_b + 1),a
-;	sonokeling.c:13: for(i=0;i<8;i++)
-	inc	r6
-	cjne	r6,#0x00,00119$
-	inc	r7
-00119$:
-	clr	c
-	mov	a,r6
-	subb	a,#0x08
-	mov	a,r7
-	xrl	a,#0x80
-	subb	a,#0x80
-	jc	00105$
-	sjmp	00103$
+	sjmp	00101$
 ;	naked function: no epilogue.
 	.area CSEG    (CODE)
 	.area CONST   (CODE)
